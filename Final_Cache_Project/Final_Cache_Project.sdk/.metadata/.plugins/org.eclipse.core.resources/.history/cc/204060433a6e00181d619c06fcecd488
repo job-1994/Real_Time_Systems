@@ -1,0 +1,338 @@
+/******************************************************************************
+*
+* Copyright (C) 2009 - 2014 Xilinx, Inc.  All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* Use of the Software is limited solely to applications:
+* (a) running on a Xilinx device, or
+* (b) that interact with a Xilinx device through a bus or interconnect.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* XILINX  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+* OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*
+* Except as contained in this notice, the name of the Xilinx shall not be used
+* in advertising or otherwise to promote the sale, use or other dealings in
+* this Software without prior written authorization from Xilinx.
+*
+******************************************************************************/
+
+#include <stdio.h>
+#include "xparameters.h"
+#include "xil_types.h"
+#include "xstatus.h"
+#include "xil_testmem.h"
+#include "xtime_l.h"
+
+#include "platform.h"
+#include "memory_config.h"
+#include "xil_printf.h"
+#include "xil_io.h"
+#include <xil_cache.h>
+
+#define repeat 100
+#define RAM0_BASEADDRESS 0xffff0000
+#define RAM1_BASEADDRESS 0x00000000
+#define DMA_BASEADDRESS 0xf8003000
+#define DDR_BASEADDRESS 0x00100000
+
+//#define RAM1_baseaddress 0x00000000
+//#define RAM1_baseaddress 0x00000000
+//#define RAM1_baseaddress 0x00000000
+//#define RAM1_baseaddress 0x00000000
+
+
+
+void test8Mem(u32 baseaddress)
+{
+	XTime tStart, tEnd, timetemp;
+	XTime timing_in = 0;
+	XTime timing_out = 0;
+	XTime timing_in_max = 0;
+	XTime timing_out_max = 0;
+
+	XTime timing_in_min = 10000;
+	XTime timing_out_min = 10000;
+
+    u8 data = 255;
+    u8 result = 0;
+
+    for(int i = 0; i < repeat; i++)
+    {
+		//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+		XTime_GetTime(&tStart);
+		Xil_Out8(baseaddress, data);
+		XTime_GetTime(&tEnd);
+
+		timetemp = 2*(tEnd - tStart);
+		timing_in = timing_in + timetemp;
+		if(timetemp < timing_in_min)
+			timing_in_min = timetemp;
+		if(timetemp > timing_in_max)
+			timing_in_max = timetemp;
+
+		//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+		XTime_GetTime(&tStart);
+		result = Xil_In8(baseaddress);
+		XTime_GetTime(&tEnd);
+
+		timetemp = 2*(tEnd - tStart);
+		timing_out = timing_out + timetemp;
+		if(timetemp < timing_out_min)
+			timing_out_min = timetemp;
+		if(timetemp > timing_out_max)
+			timing_out_max = timetemp;
+	}
+	timing_in = timing_in/repeat;
+	timing_out = timing_out/repeat;
+
+	printf("Timing In. Average: %lld, Max: %lld, Min: %lld \n\r", timing_in, timing_in_max, timing_in_min);
+	printf("Timing Out. Average: %lld, Max: %lld, Min: %lld \n\r", timing_out, timing_out_max, timing_out_min);
+}
+
+
+void test16Mem(u32 baseaddress)
+{
+	XTime tStart, tEnd, timetemp;
+	XTime timing_in = 0;
+	XTime timing_out = 0;
+	XTime timing_in_max = 0;
+	XTime timing_out_max = 0;
+
+	XTime timing_in_min = 10000;
+	XTime timing_out_min = 10000;
+
+    u16 data = 4;
+    u16 result = 0;
+
+    for(int i = 0; i < repeat; i++)
+    {
+		//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+		XTime_GetTime(&tStart);
+		Xil_Out16(baseaddress, data);
+		XTime_GetTime(&tEnd);
+
+		timetemp = 2*(tEnd - tStart);
+		timing_in = timing_in + timetemp;
+		if(timetemp < timing_in_min)
+			timing_in_min = timetemp;
+		if(timetemp > timing_in_max)
+			timing_in_max = timetemp;
+
+		//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+		XTime_GetTime(&tStart);
+		result = Xil_In16(baseaddress);
+		XTime_GetTime(&tEnd);
+
+		timetemp = 2*(tEnd - tStart);
+		timing_out = timing_out + timetemp;
+		if(timetemp < timing_out_min)
+			timing_out_min = timetemp;
+		if(timetemp > timing_out_max)
+			timing_out_max = timetemp;
+	}
+	timing_in = timing_in/repeat;
+	timing_out = timing_out/repeat;
+
+	printf("Timing In. Average: %lld, Max: %lld, Min: %lld \n\r", timing_in, timing_in_max, timing_in_min);
+	printf("Timing Out. Average: %lld, Max: %lld, Min: %lld \n\r", timing_out, timing_out_max, timing_out_min);
+}
+
+void test32Mem(u32 baseaddress)
+{
+	XTime tStart, tEnd, timetemp;
+	XTime timing_in = 0;
+	XTime timing_out = 0;
+	XTime timing_in_max = 0;
+	XTime timing_out_max = 0;
+
+	XTime timing_in_min = 10000;
+	XTime timing_out_min = 10000;
+
+    u32 data = 4;
+    u32 result = 0;
+
+    for(int i = 0; i < repeat; i++)
+    {
+		//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+		XTime_GetTime(&tStart);
+		Xil_Out32(baseaddress, data);
+		XTime_GetTime(&tEnd);
+
+		timetemp = 2*(tEnd - tStart);
+		timing_in = timing_in + timetemp;
+		if(timetemp < timing_in_min)
+			timing_in_min = timetemp;
+		if(timetemp > timing_in_max)
+			timing_in_max = timetemp;
+
+		//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+		XTime_GetTime(&tStart);
+		result = Xil_In32(baseaddress);
+		XTime_GetTime(&tEnd);
+
+		timetemp = 2*(tEnd - tStart);
+		timing_out = timing_out + timetemp;
+		if(timetemp < timing_out_min)
+			timing_out_min = timetemp;
+		if(timetemp > timing_out_max)
+			timing_out_max = timetemp;
+	}
+	timing_in = timing_in/repeat;
+	timing_out = timing_out/repeat;
+
+	printf("Timing In. Average: %lld, Max: %lld, Min: %lld \n\r", timing_in, timing_in_max, timing_in_min);
+	printf("Timing Out. Average: %lld, Max: %lld, Min: %lld \n\r", timing_out, timing_out_max, timing_out_min);
+}
+
+
+
+void testL2Cache()
+{
+	print("Testing L2 Cache\n\r");
+
+	XTime tStart, tEnd, timing;
+
+    u8 data = 4;
+    u8 result = 0;
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    Xil_Out8(0xf8f02f00, data);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("Timing L2Cache 8-bit write: %lld \n\r", timing);
+
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    result = Xil_In8(0xf8f02000);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("reading result: %i \n\r", result);
+    printf("Timing L2Cache 8-bit read: %lld \n\r", timing);
+}
+
+void testFLASH()
+{
+	print("Testing FLASH Registers\n\r");
+//	XFlash fla;
+//	int flash_result = XFlash_Initialize (fla, 0xfc000000, 2, 1);
+
+	XTime tStart, tEnd, timing;
+
+    u8 data = 4;
+    u8 result = 0;
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    Xil_Out8(0xfc000000, data);
+
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("Timing FLASH 8-bit write: %lld \n\r", timing);
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    result = Xil_In8(0xfc000000);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("reading result: %i \n\r", result);
+    printf("Timing FLASH 8-bit read: %lld \n\r", timing);
+}
+
+void executeTestRegions()
+{
+	print("Test RAM0 8-bit\n\r");
+    test8Mem(RAM0_BASEADDRESS);
+    print("Test RAM1 8-bit\n\r");
+    test8Mem(RAM1_BASEADDRESS);
+    print("Test DDR 8-bit\n\r");
+    test8Mem(DDR_BASEADDRESS);
+    print("Test DMA 8-bit\n\r");
+    test8Mem(DMA_BASEADDRESS);
+
+	print("Test RAM0 16-bit\n\r");
+    test16Mem(RAM0_BASEADDRESS);
+    print("Test RAM1 16-bit\n\r");
+    test16Mem(RAM1_BASEADDRESS);
+    print("Test DDR 16-bit\n\r");
+    test16Mem(DDR_BASEADDRESS);
+    print("Test DMA 16-bit\n\r");
+    test16Mem(DMA_BASEADDRESS);
+
+	print("Test RAM0 32-bit\n\r");
+    test32Mem(RAM0_BASEADDRESS);
+    print("Test RAM1 32-bit\n\r");
+    test32Mem(RAM1_BASEADDRESS);
+    print("Test DDR 32-bit\n\r");
+    test32Mem(DDR_BASEADDRESS);
+    print("Test DMA 32-bit\n\r");
+    test32Mem(DMA_BASEADDRESS);
+
+}
+
+
+int main()
+{
+
+    init_platform();
+
+
+    print("\n\r*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\n\r");
+    Xil_DCacheEnable();
+    Xil_ICacheEnable();
+    print("CACHE ENABLED D & I\n\r");
+    executeTestRegions();
+
+    Xil_DCacheDisable();
+    Xil_ICacheDisable();
+    print("CACHE DISABLED D & I\n\r");;
+    executeTestRegions();
+
+    Xil_ICacheEnable();
+    Xil_DCacheDisable();
+    print("CACHE D DISABLED but I ENABLED\n\r");;
+    executeTestRegions();
+
+    Xil_ICacheDisable();
+    Xil_DCacheEnable();
+    print("CACHE I DISABLED but D ENABLED\n\r");;
+    executeTestRegions();
+
+
+
+//    testL2Cache(); //Doesnt Work
+//    testFLASH(); //Doesnt Work
+
+
+
+
+
+    cleanup_platform();
+    return 0;
+}

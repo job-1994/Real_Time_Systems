@@ -1,0 +1,24 @@
+16:42:48 **** Auto Build of configuration Debug for project Memory ****
+make pre-build main-build 
+a9-linaro-pre-build-step
+ 
+Building file: ../src/main.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"src/main.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I../../Memory_bsp/ps7_cortexa9_0/include -MMD -MP -MF"src/main.d" -MT"src/main.o" -o "src/main.o" "../src/main.c"
+Finished building: ../src/main.c
+ 
+Building target: Memory.elf
+Invoking: ARM v7 gcc linker
+arm-none-eabi-gcc -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec -Wl,-T -Wl,../src/lscript.ld -L../../Memory_bsp/ps7_cortexa9_0/lib -o "Memory.elf"  ./src/main.o ./src/memory_config_g.o ./src/memorytest.o ./src/platform.o   -Wl,--start-group,-lxil,-lgcc,-lc,--end-group
+./src/memorytest.o: In function `test_memory_range':
+/home/job/Documents/Real_Time_Systems/Final_Cache_Project/Final_Cache_Project.sdk/Memory/Debug/../src/memorytest.c:56: multiple definition of `test_memory_range'
+makefile:39: recipe for target 'Memory.elf' failed
+./src/main.o:/home/job/Documents/Real_Time_Systems/Final_Cache_Project/Final_Cache_Project.sdk/Memory/Debug/../src/main.c:56: first defined here
+./src/memorytest.o: In function `main':
+/home/job/Documents/Real_Time_Systems/Final_Cache_Project/Final_Cache_Project.sdk/Memory/Debug/../src/memorytest.c:91: multiple definition of `main'
+./src/main.o:/home/job/Documents/Real_Time_Systems/Final_Cache_Project/Final_Cache_Project.sdk/Memory/Debug/../src/main.c:91: first defined here
+collect2: error: ld returned 1 exit status
+make: *** [Memory.elf] Error 1
+
+16:42:48 Build Finished (took 514ms)
+

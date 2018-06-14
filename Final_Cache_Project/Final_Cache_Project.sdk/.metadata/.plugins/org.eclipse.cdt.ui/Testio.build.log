@@ -1,0 +1,16 @@
+16:59:30 **** Auto Build of configuration Debug for project Testio ****
+make pre-build main-build 
+a9-linaro-pre-build-step
+ 
+Building file: ../src/memorytest.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"src/memorytest.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I../../Testio_bsp/ps7_cortexa9_0/include -MMD -MP -MF"src/memorytest.d" -MT"src/memorytest.o" -o "src/memorytest.o" "../src/memorytest.c"
+../src/memorytest.c:34:25: fatal error: xparameters.h: No such file or directory
+ #include "xparameters.h"
+                         ^
+compilation terminated.
+make: *** [src/memorytest.o] Error 1
+src/subdir.mk:27: recipe for target 'src/memorytest.o' failed
+
+16:59:30 Build Finished (took 479ms)
+

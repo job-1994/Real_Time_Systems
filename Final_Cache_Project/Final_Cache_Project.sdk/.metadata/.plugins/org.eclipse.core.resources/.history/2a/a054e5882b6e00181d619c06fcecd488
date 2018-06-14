@@ -1,0 +1,304 @@
+/******************************************************************************
+*
+* Copyright (C) 2009 - 2014 Xilinx, Inc.  All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* Use of the Software is limited solely to applications:
+* (a) running on a Xilinx device, or
+* (b) that interact with a Xilinx device through a bus or interconnect.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* XILINX  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+* OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*
+* Except as contained in this notice, the name of the Xilinx shall not be used
+* in advertising or otherwise to promote the sale, use or other dealings in
+* this Software without prior written authorization from Xilinx.
+*
+******************************************************************************/
+
+#include <stdio.h>
+#include "xparameters.h"
+#include "xil_types.h"
+#include "xstatus.h"
+#include "xil_testmem.h"
+#include "xtime_l.h"
+
+#include "platform.h"
+#include "memory_config.h"
+#include "xil_printf.h"
+#include "xil_io.h"
+#include <xil_cache.h>
+
+#define repeat 100
+
+
+//#include <xilflash.h>
+
+/*
+ * memory_test.c: Test memory ranges present in the Hardware Design.
+ *
+ * This application runs with D-Caches disabled. As a result cacheline requests
+ * will not be generated.
+ *
+ * For MicroBlaze/PowerPC, the BSP doesn't enable caches and this application
+ * enables only I-Caches. For ARM, the BSP enables caches by default, so this
+ * application disables D-Caches before running memory tests.
+ */
+
+void putnum(unsigned int num);
+
+void test_memory_range(struct memory_range_s *range) {
+    XStatus status;
+
+    /* This application uses print statements instead of xil_printf/printf
+     * to reduce the text size.
+     *
+     * The default linker script generated for this application does not have
+     * heap memory allocated. This implies that this program cannot use any
+     * routines that allocate memory on heap (printf is one such function).
+     * If you'd like to add such functions, then please generate a linker script
+     * that does allocate sufficient heap memory.
+     */
+
+    print("Testing memory region: "); print(range->name);  print("\n\r");
+    print("    Memory Controller: "); print(range->ip);  print("\n\r");
+    #ifdef __MICROBLAZE__
+        print("         Base Address: 0x"); putnum(range->base); print("\n\r");
+        print("                 Size: 0x"); putnum(range->size); print (" bytes \n\r");
+    #else
+        xil_printf("         Base Address: 0x%lx \n\r",range->base);
+        xil_printf("                 Size: 0x%lx bytes \n\r",range->size);
+    #endif
+
+    status = Xil_TestMem32((u32*)range->base, 1024, 0xAAAA5555, XIL_TESTMEM_ALLMEMTESTS);
+    print("          32-bit test: "); print(status == XST_SUCCESS? "PASSED!":"FAILED!"); print("\n\r");
+
+    status = Xil_TestMem16((u16*)range->base, 2048, 0xAA55, XIL_TESTMEM_ALLMEMTESTS);
+    print("          16-bit test: "); print(status == XST_SUCCESS? "PASSED!":"FAILED!"); print("\n\r");
+
+    status = Xil_TestMem8((u8*)range->base, 4096, 0xA5, XIL_TESTMEM_ALLMEMTESTS);
+    print("           8-bit test: "); print(status == XST_SUCCESS? "PASSED!":"FAILED!"); print("\n\r");
+
+}
+
+void testRAM0()
+{
+	print("Testing RAM0\n\r");
+
+	XTime tStart, tEnd, timing;
+
+    u8 data = 4;
+    u8 result = 0;
+    for(int i = 0; i < repeat; i++)
+    {
+		//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+		XTime_GetTime(&tStart);
+		Xil_Out8(0xffff0000, data);
+		XTime_GetTime(&tEnd);
+
+		timing = 2*(tEnd - tStart);
+		printf("Timing RAM0 8-bit write: %lld \n\r", timing);
+
+		//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+		XTime_GetTime(&tStart);
+		result = Xil_In8(0xffff0000);
+		XTime_GetTime(&tEnd);
+
+		timing = 2*(tEnd - tStart);
+		printf("reading result: %i \n\r", result);
+		printf("Timing RAM0 8-bit read: %lld \n\r", timing);
+    }
+}
+void testRAM1()
+{
+	print("Testing RAM1\n\r");
+
+	XTime tStart, tEnd, timing;
+
+    u8 data = 4;
+    u8 result = 0;
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    Xil_Out8(0x00000000, data);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("Timing RAM1 8-bit write: %lld \n\r", timing);
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    result = Xil_In8(0x00000000);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("reading result: %i \n\r", result);
+    printf("Timing RAM1 8-bit read: %lld \n\r", timing);
+}
+
+
+void testDMAReg()
+{
+	print("Testing DMA Registers\n\r");
+
+	XTime tStart, tEnd, timing;
+
+    u8 data = 4;
+    u8 result = 0;
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    Xil_Out8(0xf8003000, data);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("Timing DMA_Reg 8-bit write: %lld \n\r", timing);
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    result = Xil_In8(0xf8003000);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("reading result: %i \n\r", result);
+    printf("Timing DMA_Reg 8-bit read: %lld \n\r", timing);
+}
+
+
+void testL2Cache()
+{
+	print("Testing L2 Cache\n\r");
+
+	XTime tStart, tEnd, timing;
+
+    u8 data = 4;
+    u8 result = 0;
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    Xil_Out8(0xf8f02f00, data);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("Timing L2Cache 8-bit write: %lld \n\r", timing);
+
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    result = Xil_In8(0xf8f02000);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("reading result: %i \n\r", result);
+    printf("Timing L2Cache 8-bit read: %lld \n\r", timing);
+}
+
+void testDDR()
+{
+	print("Testing DDR Registers\n\r");
+
+	XTime tStart, tEnd, timing;
+
+    u8 data = 4;
+    u8 result = 0;
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    Xil_Out8(0x00100000, data);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("Timing DDR 8-bit write: %lld \n\r", timing);
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    result = Xil_In8(0x00100000);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("reading result: %i \n\r", result);
+    printf("Timing DDR 8-bit read: %lld \n\r", timing);
+}
+
+void testFLASH()
+{
+	print("Testing FLASH Registers\n\r");
+//	XFlash fla;
+//	int flash_result = XFlash_Initialize (fla, 0xfc000000, 2, 1);
+
+	XTime tStart, tEnd, timing;
+
+    u8 data = 4;
+    u8 result = 0;
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    Xil_Out8(0xfc000000, data);
+
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("Timing FLASH 8-bit write: %lld \n\r", timing);
+
+    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    XTime_GetTime(&tStart);
+    result = Xil_In8(0xfc000000);
+    XTime_GetTime(&tEnd);
+
+    timing = 2*(tEnd - tStart);
+    printf("reading result: %i \n\r", result);
+    printf("Timing FLASH 8-bit read: %lld \n\r", timing);
+}
+
+
+
+
+int main()
+{
+
+    init_platform();
+
+
+    print("\n\r*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\n\r");
+    testRAM0();
+    testRAM1();
+    testDMAReg();
+//    testL2Cache(); //Doesnt Work
+    testDDR();
+//    testFLASH(); //Doesnt Work
+
+//    Xil_DCacheDisable()
+//    Xil_ICacheDisable()
+//    Xil_DCacheEnable()
+//    Xil_ICacheEnable()
+
+
+    cleanup_platform();
+    return 0;
+}

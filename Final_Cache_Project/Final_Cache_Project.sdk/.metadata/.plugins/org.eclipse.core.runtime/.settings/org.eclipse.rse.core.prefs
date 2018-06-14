@@ -1,0 +1,4 @@
+activeuserprofiles=Job-Linux;Team
+eclipse.preferences.version=1
+org.eclipse.rse.systemtype.local.systemType.defaultUserId=job
+useridperkey=Job-Linux.Local\=job;
